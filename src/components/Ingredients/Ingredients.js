@@ -22,7 +22,9 @@ const Ingredients = () => {
       })
   }, [])
 
-  // 14
+  useEffect(() => {
+    console.log("Re-Rendering ", userIngredients)
+  }, [userIngredients])
 
   const addIngredientHandler = ingredient => {
     fetch("https://react-hooks-update-adbe0-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json", {
@@ -40,8 +42,6 @@ const Ingredients = () => {
       })
       .then(responseData => {
         setUserIngredients(prevIngredient => [
-          // Method: 1
-          // ...prevIngredient, { ...ingredient }
           ...prevIngredient,
           { id: responseData.name, ...ingredient }
         ])
@@ -50,21 +50,19 @@ const Ingredients = () => {
   }
 
   const removeHandler = index => {
-    // Method: 1
-    // const newUserIngredients = [...userIngredients]
-    // newUserIngredients.splice(index, 1)
-    // setUserIngredients(newUserIngredients)
-    // [{},{}]
-    // Method : 2
     setUserIngredients(prevIngredients => prevIngredients.filter(prevIngredient => prevIngredient.id !== index))
+  }
+
+  const filteredIngredientHandler = (filteredIngredients) => {
+    setUserIngredients(filteredIngredients)
   }
 
   return (
     <div className="App">
-      <IngredientForm onAddIngredient={addIngredientHandler} />
+      <IngredientForm onLoadIngredients={addIngredientHandler} />
 
       <section>
-        <Search />
+        <Search onLoadIngredients={filteredIngredientHandler} />
         <IngredientList ingredients={userIngredients} onRemoveItem={removeHandler} />
       </section>
     </div>
