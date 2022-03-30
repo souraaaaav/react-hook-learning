@@ -1,26 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
 import Search from './Search';
 
 const Ingredients = () => {
   const [userIngredients, setUserIngredients] = useState([])
-
-  useEffect(() => {
-    fetch("https://react-hooks-update-adbe0-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json")
-      .then(response => response.json())
-      .then(data => {
-        let newIngredient = []
-        for (let key in data) {
-          newIngredient.push({
-            id: key,
-            title: data[key].title,
-            amount: data[key].amount
-          })
-        }
-        setUserIngredients(newIngredient)
-      })
-  }, [])
 
   useEffect(() => {
     console.log("Re-Rendering ", userIngredients)
@@ -53,13 +37,13 @@ const Ingredients = () => {
     setUserIngredients(prevIngredients => prevIngredients.filter(prevIngredient => prevIngredient.id !== index))
   }
 
-  const filteredIngredientHandler = (filteredIngredients) => {
+  const filteredIngredientHandler = useCallback((filteredIngredients) => {
     setUserIngredients(filteredIngredients)
-  }
+  }, [])
 
   return (
     <div className="App">
-      <IngredientForm onLoadIngredients={addIngredientHandler} />
+      <IngredientForm onAddIngredient={addIngredientHandler} />
 
       <section>
         <Search onLoadIngredients={filteredIngredientHandler} />
