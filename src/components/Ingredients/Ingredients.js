@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useReducer } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer } from 'react';
 import ErrorModal from '../UI/ErrorModal';
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -43,7 +43,7 @@ const Ingredients = () => {
     console.log("Re-Rendering ", userIngredients)
   }, [userIngredients])
 
-  const addIngredientHandler = ingredient => {
+  const addIngredientHandler = useCallback(ingredient => {
     httpDispatch({ type: "SEND" })
     fetch("https://react-hooks-update-adbe0-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json", {
       method: "POST",
@@ -76,9 +76,9 @@ const Ingredients = () => {
         type: "ERROR",
         errData: "Something went wrong"
       }))
-  }
+  }, [])
 
-  const removeHandler = index => {
+  const removeIngredientHandler = useCallback(index => {
     httpDispatch({ type: "SEND" })
     fetch(`https://react-hooks-update-adbe0-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients/${index}.json`, {
       method: "DELETE",
@@ -97,10 +97,10 @@ const Ingredients = () => {
           errData: "Something went wrong"
         })
       })
-  }
-  const modalClose = () => {
+  }, [])
+  const modalClose = useCallback(() => {
     httpDispatch({ type: "CLOSE" })
-  }
+  }, [])
   const filteredIngredientHandler = useCallback((filteredIngredients) => {
     // setUserIngredients(filteredIngredients)
     dispatch({
@@ -109,13 +109,19 @@ const Ingredients = () => {
     })
   }, [])
 
+  const ingredientList = useMemo(() => {
+    return (
+      <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />
+    )
+  }, [userIngredients, removeIngredientHandler])
+
   return (
     <div className="App">
       <IngredientForm onAddIngredient={addIngredientHandler} isLoading={httpState.loading} />
       {httpState.error && <ErrorModal onClose={modalClose}>{httpState.error}</ErrorModal>}
       <section>
         <Search onLoadIngredients={filteredIngredientHandler} />
-        <IngredientList ingredients={userIngredients} onRemoveItem={removeHandler} />
+        {ingredientList}
       </section>
     </div>
   );
