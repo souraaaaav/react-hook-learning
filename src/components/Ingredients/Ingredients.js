@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useReducer } from 'react';
+import useHttp from '../../hooks/http';
 import ErrorModal from '../UI/ErrorModal';
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -17,89 +18,79 @@ const ingredientReducer = (currentIngredients, action) => {
   }
 }
 
-const httpReducer = (currentHttpState, action) => {
-  switch (action.type) {
-    case 'SEND':
-      return { loading: true, error: null }
-    case 'RESPONSE':
-      return { ...currentHttpState, loading: false }
-    case 'ERROR':
-      return { loading: false, error: action.errData }
-    case "CLOSE":
-      return { loading: false, error: null }
-    default:
-      throw new Error("Should not be reached")
-  }
-}
-
 const Ingredients = () => {
   const [userIngredients, dispatch] = useReducer(ingredientReducer, [])
-  const [httpState, httpDispatch] = useReducer(httpReducer, { loading: false, error: null })
+  const { isLoading, data, error, sendRequest, extra, identifier } = useHttp();
+
   // const [userIngredients, setUserIngredients] = useState([])
   // const [isLoading, setIsLoading] = useState(false)
   // const [error, setError] = useState()
 
   useEffect(() => {
-    console.log("Re-Rendering ", userIngredients)
-  }, [userIngredients])
+    if (!isLoading && !error && identifier === 'REMOVE_INGREDIENT') {
+      dispatch({ type: 'DELETE', id: extra })
+    }
+    else if (!isLoading && !error && identifier === 'ADD_INGREDIENT') {
+      dispatch({
+        type: "ADD",
+        ingredient: {
+          id: data.name,
+          ...extra
+        }
+      })
+    }
+  }, [data, extra, identifier, error, isLoading])
 
   const addIngredientHandler = useCallback(ingredient => {
-    httpDispatch({ type: "SEND" })
-    fetch("https://react-hooks-update-adbe0-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json", {
-      method: "POST",
-      body: JSON.stringify(ingredient),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(response => {
-        httpDispatch({ type: "RESPONSE" })
-        if (response.ok) {
-          return response.json()
-        }
-        throw new Error("Something went wrong")
-      })
-      .then(responseData => {
-        dispatch({
-          type: "ADD",
-          ingredient: {
-            id: responseData.name,
-            ...ingredient
-          }
-        })
-        // setUserIngredients(prevIngredient => [
-        //   ...prevIngredient,
-        //   { id: responseData.name, ...ingredient }
-        // ])
-      })
-      .catch(e => httpDispatch({
-        type: "ERROR",
-        errData: "Something went wrong"
-      }))
+    sendRequest("https://react-hooks-update-adbe0-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json", "POST",
+      JSON.stringify(ingredient),
+      ingredient,
+      'ADD_INGREDIENT'
+    )
+    //   httpDispatch({ type: "SEND" })
+    //   fetch("https://react-hooks-update-adbe0-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json", {
+    //     method: "POST",
+    //     body: JSON.stringify(ingredient),
+    //     headers: {
+    //       'Content-Type': 'application/json'
+    //     }
+    //   })
+    //     .then(response => {
+    //       httpDispatch({ type: "RESPONSE" })
+    //       if (response.ok) {
+    //         return response.json()
+    //       }
+    //       throw new Error("Something went wrong")
+    //     })
+    //     .then(responseData => {
+    //       dispatch({
+    //         type: "ADD",
+    //         ingredient: {
+    //           id: responseData.name,
+    //           ...ingredient
+    //         }
+    //       })
+    //       // setUserIngredients(prevIngredient => [
+    //       //   ...prevIngredient,
+    //       //   { id: responseData.name, ...ingredient }
+    //       // ])
+    //     })
+    //     .catch(e => httpDispatch({
+    //       type: "ERROR",
+    //       errData: "Something went wrong"
+    //     }))
   }, [])
 
   const removeIngredientHandler = useCallback(index => {
-    httpDispatch({ type: "SEND" })
-    fetch(`https://react-hooks-update-adbe0-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients/${index}.json`, {
-      method: "DELETE",
-    })
-      .then(response => {
-        httpDispatch({ type: "RESPONSE" })
-        dispatch({
-          type: "DELETE",
-          id: index
-        })
-        // setUserIngredients(prevIngredients => prevIngredients.filter(prevIngredient => prevIngredient.id !== index))
-      })
-      .catch(err => {
-        httpDispatch({
-          type: "ERROR",
-          errData: "Something went wrong"
-        })
-      })
-  }, [])
+    sendRequest(`https://react-hooks-update-adbe0-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients/${index}.json`,
+      'DELETE',
+      null,
+      index,
+      'REMOVE_INGREDIENT'
+    )
+  }, [sendRequest])
   const modalClose = useCallback(() => {
-    httpDispatch({ type: "CLOSE" })
+    // httpDispatch({ type: "CLOSE" })
   }, [])
   const filteredIngredientHandler = useCallback((filteredIngredients) => {
     // setUserIngredients(filteredIngredients)
@@ -117,8 +108,8 @@ const Ingredients = () => {
 
   return (
     <div className="App">
-      <IngredientForm onAddIngredient={addIngredientHandler} isLoading={httpState.loading} />
-      {httpState.error && <ErrorModal onClose={modalClose}>{httpState.error}</ErrorModal>}
+      <IngredientForm onAddIngredient={addIngredientHandler} isLoading={isLoading} />
+      {error && <ErrorModal onClose={modalClose}>{error}</ErrorModal>}
       <section>
         <Search onLoadIngredients={filteredIngredientHandler} />
         {ingredientList}
@@ -126,6 +117,5 @@ const Ingredients = () => {
     </div>
   );
 }
-
 
 export default Ingredients;

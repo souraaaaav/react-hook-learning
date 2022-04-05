@@ -1,7 +1,6 @@
 import React from 'react';
 import './IngredientList.css';
 
-
 const IngredientList = props => {
   console.log("Rendering Ingredient List")
   return (
