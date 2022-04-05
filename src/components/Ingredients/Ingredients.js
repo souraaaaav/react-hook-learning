@@ -20,11 +20,7 @@ const ingredientReducer = (currentIngredients, action) => {
 
 const Ingredients = () => {
   const [userIngredients, dispatch] = useReducer(ingredientReducer, [])
-  const { isLoading, data, error, sendRequest, extra, identifier } = useHttp();
-
-  // const [userIngredients, setUserIngredients] = useState([])
-  // const [isLoading, setIsLoading] = useState(false)
-  // const [error, setError] = useState()
+  const { isLoading, data, error, sendRequest, extra, identifier, close } = useHttp();
 
   useEffect(() => {
     if (!isLoading && !error && identifier === 'REMOVE_INGREDIENT') {
@@ -47,39 +43,7 @@ const Ingredients = () => {
       ingredient,
       'ADD_INGREDIENT'
     )
-    //   httpDispatch({ type: "SEND" })
-    //   fetch("https://react-hooks-update-adbe0-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients.json", {
-    //     method: "POST",
-    //     body: JSON.stringify(ingredient),
-    //     headers: {
-    //       'Content-Type': 'application/json'
-    //     }
-    //   })
-    //     .then(response => {
-    //       httpDispatch({ type: "RESPONSE" })
-    //       if (response.ok) {
-    //         return response.json()
-    //       }
-    //       throw new Error("Something went wrong")
-    //     })
-    //     .then(responseData => {
-    //       dispatch({
-    //         type: "ADD",
-    //         ingredient: {
-    //           id: responseData.name,
-    //           ...ingredient
-    //         }
-    //       })
-    //       // setUserIngredients(prevIngredient => [
-    //       //   ...prevIngredient,
-    //       //   { id: responseData.name, ...ingredient }
-    //       // ])
-    //     })
-    //     .catch(e => httpDispatch({
-    //       type: "ERROR",
-    //       errData: "Something went wrong"
-    //     }))
-  }, [])
+  }, [sendRequest])
 
   const removeIngredientHandler = useCallback(index => {
     sendRequest(`https://react-hooks-update-adbe0-default-rtdb.asia-southeast1.firebasedatabase.app/ingredients/${index}.json`,
@@ -90,10 +54,9 @@ const Ingredients = () => {
     )
   }, [sendRequest])
   const modalClose = useCallback(() => {
-    // httpDispatch({ type: "CLOSE" })
-  }, [])
+    close()
+  }, [close])
   const filteredIngredientHandler = useCallback((filteredIngredients) => {
-    // setUserIngredients(filteredIngredients)
     dispatch({
       type: "SET",
       ingredients: filteredIngredients
